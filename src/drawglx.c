@@ -24,11 +24,17 @@ typedef GLXContext (*glXCreateContextAttribsARBfn)(Display *, GLXFBConfig,
                                                    GLXContext, Bool,
                                                    const int *);
 
-xoverlay_glx_state glx_state;
+typedef struct {
+    int version_major;
+    int version_minor;
+    GLXContext context;
+} xoverlay_glx_state;
 
-// Helper to check for extension string presence.  Adapted from:
-//   http://www.opengl.org/resources/features/OGLextensions/
-int glx_is_extension_supported(const char *list, const char *extension)
+static xoverlay_glx_state glx_state;
+
+// Helper to check for extension string presence. Adapted from:
+// http://www.opengl.org/resources/features/OGLextensions/
+static int glx_is_extension_supported(const char *list, const char *extension)
 {
     const char *start;
     const char *where, *terminator;
@@ -66,29 +72,29 @@ int xoverlay_glx_init()
 
 int xoverlay_glx_create_window()
 {
-    GLint attribs[] = { GLX_X_RENDERABLE,
-                        GL_TRUE,
-                        GLX_DRAWABLE_TYPE,
-                        GLX_WINDOW_BIT,
-                        GLX_RENDER_TYPE,
-                        GLX_RGBA_BIT,
-                        GLX_X_VISUAL_TYPE,
-                        GLX_TRUE_COLOR,
-                        GLX_DEPTH_SIZE,
-                        24,
-                        GLX_STENCIL_SIZE,
-                        8,
-                        GLX_RED_SIZE,
-                        8,
-                        GLX_GREEN_SIZE,
-                        8,
-                        GLX_BLUE_SIZE,
-                        8,
-                        GLX_ALPHA_SIZE,
-                        8,
-                        GLX_DOUBLEBUFFER,
-                        GL_TRUE,
-                        None };
+    GLint attribs[] = {GLX_X_RENDERABLE,
+                       GL_TRUE,
+                       GLX_DRAWABLE_TYPE,
+                       GLX_WINDOW_BIT,
+                       GLX_RENDER_TYPE,
+                       GLX_RGBA_BIT,
+                       GLX_X_VISUAL_TYPE,
+                       GLX_TRUE_COLOR,
+                       GLX_DEPTH_SIZE,
+                       24,
+                       GLX_STENCIL_SIZE,
+                       8,
+                       GLX_RED_SIZE,
+                       8,
+                       GLX_GREEN_SIZE,
+                       8,
+                       GLX_BLUE_SIZE,
+                       8,
+                       GLX_ALPHA_SIZE,
+                       8,
+                       GLX_DOUBLEBUFFER,
+                       GL_TRUE,
+                       None};
 
     int fbc_count;
     GLXFBConfig *fbc = glXChooseFBConfig(
@@ -97,7 +103,7 @@ int xoverlay_glx_create_window()
     {
         return -1;
     }
-    int fbc_best         = -1;
+    int fbc_best = -1;
     int fbc_best_samples = -1;
     for (int i = 0; i < fbc_count; ++i)
     {
@@ -110,13 +116,14 @@ int xoverlay_glx_create_window()
                              &samples);
         if (fbc_best < 0 || samples > fbc_best_samples)
         {
-            fbc_best         = i;
+            fbc_best = i;
             fbc_best_samples = samples;
         }
         XFree(info);
     }
     if (fbc_best == -1)
     {
+        XFree(fbc);
         return -1;
     }
     GLXFBConfig fbconfig = fbc[fbc_best];
@@ -128,16 +135,16 @@ int xoverlay_glx_create_window()
     {
         return -1;
     }
-    Window root               = DefaultRootWindow(xoverlay_library.display);
-    xoverlay_library.colormap = XCreateColormap(xoverlay_library.display, root,
-                                                info->visual, AllocNone);
+    Window root = DefaultRootWindow(xoverlay_library.display);
+    xoverlay_library.colormap =
+        XCreateColormap(xoverlay_library.display, root, info->visual, AllocNone);
     XSetWindowAttributes attr;
-    attr.background_pixel  = 0x0;
-    attr.border_pixel      = 0;
-    attr.save_under        = 1;
+    attr.background_pixel = 0x0;
+    attr.border_pixel = 0;
+    attr.save_under = 1;
     attr.override_redirect = 1;
-    attr.colormap          = xoverlay_library.colormap;
-    attr.event_mask        = 0x0;
+    attr.colormap = xoverlay_library.colormap;
+    attr.event_mask = 0x0;
     attr.do_not_propagate_mask =
         (KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
          PointerMotionMask | ButtonMotionMask);
@@ -175,8 +182,8 @@ int xoverlay_glx_create_window()
     const char *extensions = glXQueryExtensionsString(xoverlay_library.display,
                                                       xoverlay_library.screen);
     glXCreateContextAttribsARBfn glXCreateContextAttribsARB =
-        (glXCreateContextAttribsARBfn) glXGetProcAddressARB(
-            (const GLubyte *) "glXCreateContextAttribsARB");
+        (glXCreateContextAttribsARBfn)glXGetProcAddressARB(
+            (const GLubyte *)"glXCreateContextAttribsARB");
 
     if (!glx_is_extension_supported(extensions, "GLX_ARB_create_context"))
     {
@@ -185,8 +192,8 @@ int xoverlay_glx_create_window()
     }
     else
     {
-        int ctx_attribs[] = { GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-                              GLX_CONTEXT_MINOR_VERSION_ARB, 0, None };
+        int ctx_attribs[] = {GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                             GLX_CONTEXT_MINOR_VERSION_ARB, 0, None};
         glx_state.context = glXCreateContextAttribsARB(
             xoverlay_library.display, fbconfig, NULL, GL_TRUE, ctx_attribs);
         XSync(xoverlay_library.display, GL_FALSE);
@@ -207,8 +214,8 @@ int xoverlay_glx_create_window()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT =
-        (PFNGLXSWAPINTERVALEXTPROC) glXGetProcAddressARB(
-            (const GLubyte *) "glXSwapIntervalEXT");
+        (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB(
+            (const GLubyte *)"glXSwapIntervalEXT");
     if (glXSwapIntervalEXT)
         glXSwapIntervalEXT(xoverlay_library.display, xoverlay_library.window,
                            0);
