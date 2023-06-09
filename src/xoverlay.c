@@ -49,52 +49,54 @@ int xoverlay_init()
     xoverlay_library.init = 1;
 
     return 0;
-}
+int xoverlay_initialized = 0;
+int xoverlay_visibility = 0;
+int xoverlay_drawing = 0;
 
 void xoverlay_destroy()
 {
-    if (!xoverlay_library.init)
+    if (!xoverlay_initialized)
         return;
 
     XDestroyWindow(xoverlay_library.display, xoverlay_library.window);
     XCloseDisplay(xoverlay_library.display);
     xoverlay_glx_destroy();
-    xoverlay_library.init = 0;
+    xoverlay_initialized = 0;
 }
 
 void xoverlay_show()
 {
-    if (xoverlay_library.mapped == 1)
+    if (xoverlay_visibility)
         return;
 
     XMapWindow(xoverlay_library.display, xoverlay_library.window);
-    xoverlay_library.mapped = 1;
+    xoverlay_visibility = 1;
 }
 
 void xoverlay_hide()
 {
-    if (xoverlay_library.mapped == 0)
+    if (!xoverlay_visibility)
         return;
 
     XUnmapWindow(xoverlay_library.display, xoverlay_library.window);
-    xoverlay_library.mapped = 0;
+    xoverlay_visibility = 0;
 }
 
 void xoverlay_draw_begin()
 {
-    if (!xoverlay_library.init || xoverlay_library.drawing)
+    if (xoverlay_drawing)
         return;
 
-    xoverlay_library.drawing = 1;
+    xoverlay_drawing = 1;
     glXMakeCurrent(xoverlay_library.display, xoverlay_library.window, glx_state.context);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // Optional: glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void xoverlay_draw_end()
 {
-    if (!xoverlay_library.init || !xoverlay_library.drawing)
+    if (!xoverlay_drawing)
         return;
 
     glXSwapBuffersfn(xoverlay_library.display, xoverlay_library.window);
-    xoverlay_library.drawing = 0;
+    xoverlay_drawing = 0;
 }
