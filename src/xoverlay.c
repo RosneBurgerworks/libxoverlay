@@ -1,3 +1,9 @@
+/*
+ * overlay.c
+ *
+ *  Created on: Nov 9, 2017
+ *      Author: nullifiedcat
+ */
 #include "internal/drawglx.h"
 #include <GL/glx.h>
 #include <X11/extensions/shape.h>
