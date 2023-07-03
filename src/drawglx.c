@@ -1,3 +1,9 @@
+/*
+ * drawglx.c
+ *
+ *  Created on: Nov 9, 2017
+ *      Author: nullifiedcat
+ */
 #include "internal/drawglx.h"
 
 #include <GL/glew.h>
