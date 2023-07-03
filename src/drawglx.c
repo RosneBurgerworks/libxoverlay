@@ -1,9 +1,3 @@
-/*
- * drawglx.c
- *
- *  Created on: Nov 9, 2017
- *      Author: nullifiedcat
- */
 #include "internal/drawglx.h"
 
 #include <GL/glew.h>
@@ -173,7 +167,7 @@ int xoverlay_glx_create_window()
 
     if (!glXIsDirect(xoverlay_library.display, glx_state.context))
     {
-        ;
+        // Handle error or warning
     }
 
     glXMakeCurrent(xoverlay_library.display, xoverlay_library.window, glx_state.context);
