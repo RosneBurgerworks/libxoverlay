@@ -5,11 +5,9 @@
  *      Author: nullifiedcat
  */
 #include "internal/drawglx.h"
-
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -19,32 +17,27 @@
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+
 typedef GLXContext (*glXCreateContextAttribsARBfn)(Display *, GLXFBConfig, GLXContext, Bool, const int *);
+typedef void (*glXSwapIntervalEXT_t)(Display *, GLXDrawable, int);
 
 xoverlay_glx_state glx_state;
 
 int glx_is_extension_supported(const char *list, const char *extension)
 {
-    const char *start;
+    const char *start = list;
     const char *where, *terminator;
+    size_t extensionLen = strlen(extension);
 
-    where = strchr(extension, ' ');
-    if (where || *extension == '\0')
-        return 0;
-
-    start = list;
-    while (1)
+    while ((where = strstr(start, extension)) != NULL)
     {
-        where = strstr(start, extension);
+        terminator = where + extensionLen;
 
-        if (!where)
-            break;
-
-        terminator = where + strlen(extension);
-
-        if (where == start || *(where - 1) == ' ')
-            if (*terminator == ' ' || *terminator == '\0')
-                return 1;
+        if ((where == start || *(where - 1) == ' ') &&
+            (*terminator == ' ' || *terminator == '\0'))
+        {
+            return 1;
+        }
 
         start = terminator;
     }
@@ -84,6 +77,7 @@ int xoverlay_glx_create_window()
 
     int fbc_best = -1;
     int fbc_best_samples = -1;
+
     for (int i = 0; i < fbc_count; ++i)
     {
         XVisualInfo *info = glXGetVisualFromFBConfig(xoverlay_library.display, fbc[i]);
@@ -94,6 +88,7 @@ int xoverlay_glx_create_window()
 
         int samples;
         glXGetFBConfigAttrib(xoverlay_library.display, fbc[i], GLX_SAMPLES, &samples);
+
         if (fbc_best < 0 || samples > fbc_best_samples)
         {
             fbc_best = i;
@@ -120,13 +115,14 @@ int xoverlay_glx_create_window()
     Window root = DefaultRootWindow(xoverlay_library.display);
     xoverlay_library.colormap = XCreateColormap(xoverlay_library.display, root, info->visual, AllocNone);
     XSetWindowAttributes attr;
+    memset(&attr, 0, sizeof(attr));
     attr.background_pixel = 0x0;
     attr.border_pixel = 0;
     attr.save_under = 1;
     attr.override_redirect = 1;
     attr.colormap = xoverlay_library.colormap;
     attr.event_mask = 0x0;
-    attr.do_not_propagate_mask = (KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ButtonMotionMask);
+    attr.do_not_propagate_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ButtonMotionMask;
 
     unsigned long mask = CWBackPixel | CWBorderPixel | CWSaveUnder | CWOverrideRedirect | CWColormap | CWEventMask | CWDontPropagate;
     xoverlay_library.window = XCreateWindow(xoverlay_library.display, root, 0, 0, xoverlay_library.width, xoverlay_library.height, 0, info->depth, InputOutput, info->visual, mask, &attr);
@@ -186,7 +182,7 @@ int xoverlay_glx_create_window()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
+    glXSwapIntervalEXT_t glXSwapIntervalEXT = (glXSwapIntervalEXT_t)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
     if (glXSwapIntervalEXT)
     {
         glXSwapIntervalEXT(xoverlay_library.display, xoverlay_library.window, 0);
