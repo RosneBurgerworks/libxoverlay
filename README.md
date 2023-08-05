@@ -12,4 +12,4 @@ sudo make install
 ```
 
 # Usage
-im going to tickle you 
+im going to tickle you and your family
