@@ -1,18 +1,26 @@
-#include "internal/drawglx.h"
+/*
+ * drawglx.c
+ *
+ *  Created on: Nov 9, 2017
+ *      Author: nullifiedcat
+ * 
+ *  Converted to C++ by: rosne-gamingyt
+ */
+
+#include "internal/drawglx.hpp"
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <xoverlay.h>
+#include <xoverlay.hpp>
 #include <GL/glx.h>
-#include <stdio.h>
+#include <iostream>
 #include <X11/extensions/shape.h>
 #include <X11/extensions/Xfixes.h>
 
-typedef GLXContext (*glXCreateContextAttribsARBfn)(Display *, GLXFBConfig, GLXContext, Bool, const int *);
+typedef GLXContext (*glXCreateContextAttribsARBfn)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 
 xoverlay_glx_state glx_state;
 
-int xoverlay_glx_create_window()
-{
+int xoverlay_glx_create_window() {
     GLint attribs[] = {
         GLX_X_RENDERABLE, GL_TRUE,
         GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
@@ -25,24 +33,22 @@ int xoverlay_glx_create_window()
     };
 
     int fbc_count;
-    GLXFBConfig *fbc = glXChooseFBConfig(xoverlay_library.display, xoverlay_library.screen, attribs, &fbc_count);
+    GLXFBConfig* fbc = glXChooseFBConfig(xoverlay_library.display, xoverlay_library.screen, attribs, &fbc_count);
     if (!fbc)
         return -1;
 
     int fbc_best = -1;
     int fbc_best_samples = -1;
 
-    for (int i = 0; i < fbc_count; ++i)
-    {
-        XVisualInfo *info = glXGetVisualFromFBConfig(xoverlay_library.display, fbc[i]);
+    for (int i = 0; i < fbc_count; ++i) {
+        XVisualInfo* info = glXGetVisualFromFBConfig(xoverlay_library.display, fbc[i]);
         if (info->depth >= 32)
             continue;
 
         int samples;
         glXGetFBConfigAttrib(xoverlay_library.display, fbc[i], GLX_SAMPLES, &samples);
 
-        if (fbc_best < 0 || samples > fbc_best_samples)
-        {
+        if (fbc_best < 0 || samples > fbc_best_samples) {
             fbc_best = i;
             fbc_best_samples = samples;
         }
@@ -56,7 +62,7 @@ int xoverlay_glx_create_window()
     GLXFBConfig fbconfig = fbc[fbc_best];
     XFree(fbc);
 
-    XVisualInfo *info = glXGetVisualFromFBConfig(xoverlay_library.display, fbconfig);
+    XVisualInfo* info = glXGetVisualFromFBConfig(xoverlay_library.display, fbconfig);
     if (!info)
         return -1;
 
@@ -84,8 +90,8 @@ int xoverlay_glx_create_window()
 
     xoverlay_show();
 
-    const char *extensions = glXQueryExtensionsString(xoverlay_library.display, xoverlay_library.screen);
-    glXCreateContextAttribsARBfn glXCreateContextAttribsARB = (glXCreateContextAttribsARBfn)glXGetProcAddressARB((const GLubyte *)"glXCreateContextAttribsARB");
+    const char* extensions = glXQueryExtensionsString(xoverlay_library.display, xoverlay_library.screen);
+    glXCreateContextAttribsARBfn glXCreateContextAttribsARB = (glXCreateContextAttribsARBfn)glXGetProcAddressARB(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB"));
 
     int ctx_attribs[] = {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -93,7 +99,7 @@ int xoverlay_glx_create_window()
         None
     };
 
-    glx_state.context = glXCreateContextAttribsARB(xoverlay_library.display, fbconfig, NULL, GL_TRUE, ctx_attribs);
+    glx_state.context = glXCreateContextAttribsARB(xoverlay_library.display, fbconfig, nullptr, GL_TRUE, ctx_attribs);
     if (!glx_state.context)
         return -1;
 
@@ -106,7 +112,6 @@ int xoverlay_glx_create_window()
     return 0;
 }
 
-void xoverlay_glx_swap_buffers()
-{
+void xoverlay_glx_swap_buffers() {
     glXSwapBuffers(xoverlay_library.display, xoverlay_library.window);
 }

@@ -1,8 +1,10 @@
 /*
- * drawglx.h
+ * drawglx.hpp
  *
- *  Created on: Nov 9, 2017
- *      Author: nullifiedcat
+ * Created on: Nov 9, 2017
+ * Author: nullifiedcat
+ * 
+ * Converted to C++ by: rosne-gamingyt
  */
 
 #pragma once
@@ -11,12 +13,12 @@
 #include <GL/gl.h>
 #include <GL/glx.h>
 
-typedef struct 
+struct xoverlay_glx_state
 {
     int version_major;
     int version_minor;
     GLXContext context;
-} xoverlay_glx_state;
+};
 
 extern xoverlay_glx_state glx_state;
 

@@ -1,16 +1,18 @@
 /*
- * overlay.c
+ * xoverlay.cpp
  *
  *  Created on: Nov 9, 2017
  *      Author: nullifiedcat
+ * 
+ *  Converted to C++ by: rosne-gamingyt
  */
-#include "internal/drawglx.h"
+#include "internal/drawglx.hpp"
 #include <GL/glx.h>
 #include <X11/extensions/shape.h>
 #include <X11/extensions/Xfixes.h>
-#include <string.h>
-#include <stdio.h>
-#include <xoverlay.h>
+#include <cstring>
+#include <cstdio>
+#include "xoverlay.hpp"
 #include <dlfcn.h> // dlsym
 
 int event_ShapeNotify;
@@ -21,10 +23,10 @@ glXSwapBuffers_t glXSwapBuffersfn;
 
 int xoverlay_init()
 {
-    memset(&xoverlay_library, 0, sizeof(struct xoverlay_library));
+    std::memset(&xoverlay_library, 0, sizeof(struct xoverlay_library));
 
-    xoverlay_library.display = XOpenDisplay(NULL);
-    if (xoverlay_library.display == NULL)
+    xoverlay_library.display = XOpenDisplay(nullptr);
+    if (xoverlay_library.display == nullptr)
         return -2;
 
     xoverlay_library.screen = DefaultScreen(xoverlay_library.display);
@@ -40,7 +42,7 @@ int xoverlay_init()
     if (xoverlay_glx_create_window() < 0)
         return -5;
 
-    glXSwapBuffersfn = (glXSwapBuffers_t)dlsym((void *)0xFFFFFFFF, "glXSwapBuffers");
+    glXSwapBuffersfn = (glXSwapBuffers_t)dlsym(reinterpret_cast<void*>(0xFFFFFFFF), "glXSwapBuffers");
 
     if (!glXSwapBuffersfn)
         return -6;
